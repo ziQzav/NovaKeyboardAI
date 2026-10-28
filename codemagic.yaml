@@ -26,7 +26,7 @@ workflows:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             ARCHS=arm64 \
-            build | tail -80
+            build 2>&1 | tee "$CM_BUILD_DIR/build.log" | tail -80
 
       - name: Package IPA
         script: |
@@ -43,3 +43,4 @@ workflows:
 
     artifacts:
       - $CM_BUILD_DIR/NovaKeyboardAI-unsigned.ipa
+      - $CM_BUILD_DIR/build.log
