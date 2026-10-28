@@ -1,0 +1,45 @@
+workflows:
+  ios-unsigned:
+    name: Nova Keyboard - unsigned IPA
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      xcode: latest
+      vars:
+        APP_NAME: "NovaKeyboardAI"
+    scripts:
+      - name: Show toolchain
+        script: |
+          xcodebuild -version
+          sw_vers
+
+      - name: Build (unsigned)
+        script: |
+          set -o pipefail
+          xcodebuild \
+            -project NovaKeyboardAI.xcodeproj \
+            -target NovaKeyboardAI \
+            -sdk iphoneos \
+            -configuration Release \
+            SYMROOT="$CM_BUILD_DIR/out" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            ARCHS=arm64 \
+            build | tail -80
+
+      - name: Package IPA
+        script: |
+          APP="$CM_BUILD_DIR/out/Release-iphoneos/NovaKeyboardAI.app"
+          test -d "$APP"
+          ls -la "$APP" "$APP/PlugIns"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :NSExtension:NSExtensionAttributes:PrimaryLanguage' "$APP/PlugIns/NovaKeyboard.appex/Info.plist"
+          mkdir -p "$CM_BUILD_DIR/Payload"
+          cp -R "$APP" "$CM_BUILD_DIR/Payload/"
+          cd "$CM_BUILD_DIR"
+          zip -qry NovaKeyboardAI-unsigned.ipa Payload
+          ls -lh NovaKeyboardAI-unsigned.ipa
+
+    artifacts:
+      - $CM_BUILD_DIR/NovaKeyboardAI-unsigned.ipa
