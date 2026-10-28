@@ -12,13 +12,13 @@ extension NovaKeyboardView {
                     novaActions = NovaActionStore.loadEnabled()
                     withAnimation(.easeOut(duration: 0.15)) { showActionMenu.toggle() }
                 } label: {
-                    Image(systemName: "sparkles").foregroundColor(Color(red: 0, green: 0.8, blue: 0.85)).font(.system(size: 7))
+                    Image(systemName: "sparkles").foregroundColor(isDark ? .white.opacity(0.55) : .black.opacity(0.55)).font(.system(size: 12))
                 }
                 .buttonStyle(PlainButtonStyle())
             }
             Text(statusMessage)
-                .font(.system(size: 8, design: .monospaced))
-                .foregroundColor(isDark ? .white.opacity(0.4) : .black.opacity(0.3))
+                .font(.system(size: 12))
+                .foregroundColor(isDark ? .white.opacity(0.55) : .black.opacity(0.55))
                 .lineLimit(1)
             Spacer()
 
@@ -40,7 +40,7 @@ extension NovaKeyboardView {
             }
         }
         .padding(.horizontal, 6)
-        .frame(height: 14)
+        .frame(height: 30)
     }
 
     // MARK: - Shift Button (Apple-style double-tap for caps lock)
@@ -66,12 +66,12 @@ extension NovaKeyboardView {
         } label: {
             Image(systemName: isCapsLocked ? "capslock.fill" : (isShifted ? "shift.fill" : "shift"))
                 .font(.system(size: 15))
-                .foregroundColor((isShifted || isCapsLocked) ? .black : (isDark ? .white : .black))
+                .foregroundColor(isDark ? .white : .black)
                 .frame(width: 44, height: customKeyHeight)
-                .background(RoundedRectangle(cornerRadius: 5).fill(
+                .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fill(
                     (isShifted || isCapsLocked)
-                    ? Color(red: 0, green: 0.8, blue: 0.85)
-                    : (isDark ? Color.white.opacity(0.15) : Color(white: 0.72))
+                    ? NovaStyle.keyFill(isDark)
+                    : NovaStyle.specialFill(isDark)
                 ))
                 .contentShape(Rectangle().inset(by: -4)) // extra hitbox
         }.buttonStyle(PlainButtonStyle())
@@ -91,7 +91,7 @@ extension NovaKeyboardView {
                     .font(.system(size: 15, weight: .regular))
                     .foregroundColor(isDark ? .white : .black)
                     .frame(width: 40, height: customKeyHeight)
-                    .background(RoundedRectangle(cornerRadius: 5).fill(isDark ? Color.white.opacity(0.15) : Color(white: 0.72)))
+                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fillNovaStyle.specialFill(isDark))
             }.buttonStyle(PlainButtonStyle())
 
             Button {
@@ -102,7 +102,7 @@ extension NovaKeyboardView {
                     .font(.system(size: 16))
                     .foregroundColor(isDark ? .white : .black)
                     .frame(width: 36, height: customKeyHeight)
-                    .background(RoundedRectangle(cornerRadius: 5).fill(isDark ? Color.white.opacity(0.15) : Color(white: 0.72)))
+                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fillNovaStyle.specialFill(isDark))
             }.buttonStyle(PlainButtonStyle())
 
             Button { controller.advanceToNextInputMode() } label: {
@@ -110,7 +110,7 @@ extension NovaKeyboardView {
                     .font(.system(size: 16))
                     .foregroundColor(isDark ? .white : .black)
                     .frame(width: 36, height: customKeyHeight)
-                    .background(RoundedRectangle(cornerRadius: 5).fill(isDark ? Color.white.opacity(0.15) : Color(white: 0.72)))
+                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fillNovaStyle.specialFill(isDark))
             }.buttonStyle(PlainButtonStyle())
 
             Button {
@@ -121,7 +121,7 @@ extension NovaKeyboardView {
                     .font(.system(size: 18))
                     .foregroundColor(isDark ? .white : .black)
                     .frame(width: 28, height: customKeyHeight)
-                    .background(RoundedRectangle(cornerRadius: 5).fill(isDark ? Color.white.opacity(0.15) : Color(white: 0.72)))
+                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fillNovaStyle.specialFill(isDark))
             }.buttonStyle(PlainButtonStyle())
 
             spaceBar
@@ -136,7 +136,7 @@ extension NovaKeyboardView {
                     .font(.system(size: 18))
                     .foregroundColor(isDark ? .white : .black)
                     .frame(width: 28, height: customKeyHeight)
-                    .background(RoundedRectangle(cornerRadius: 5).fill(isDark ? Color.white.opacity(0.15) : Color(white: 0.72)))
+                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fillNovaStyle.specialFill(isDark))
             }.buttonStyle(PlainButtonStyle())
 
             Button {
@@ -145,11 +145,11 @@ extension NovaKeyboardView {
                 shouldAutoCapitalize = true
                 isShifted = true
             } label: {
-                Image(systemName: "return.left")
+                Text("return")
                     .font(.system(size: 15))
-                    .foregroundColor(.white)
-                    .frame(width: 52, height: customKeyHeight)
-                    .background(RoundedRectangle(cornerRadius: 5).fill(Color.blue))
+                    .foregroundColor(isDark ? .white : .black)
+                    .frame(width: 60, height: customKeyHeight)
+                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fill(NovaStyle.specialFill(isDark)))
             }.buttonStyle(PlainButtonStyle())
         }
         .padding(.horizontal, 3)
@@ -172,11 +172,11 @@ extension NovaKeyboardView {
             lastSpaceTime = now
             playKeySound()
         } label: {
-            Text(isSpaceDragging ? "◆ Cursor" : "Nova AI")
-                .font(.system(size: 14, design: .rounded))
-                .foregroundColor(isSpaceDragging ? Color(red: 0, green: 0.8, blue: 0.85) : (isDark ? .white.opacity(0.3) : .black.opacity(0.3)))
+            Text(isSpaceDragging ? "◆" : "space")
+                .font(.system(size: 15))
+                .foregroundColor(isSpaceDragging ? (isDark ? .white : .black) : (isDark ? .white.opacity(0.55) : .black.opacity(0.55)))
                 .frame(maxWidth: .infinity).frame(height: customKeyHeight)
-                .background(RoundedRectangle(cornerRadius: 5).fill(isDark ? Color.white.opacity(0.15) : Color.white))
+                .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fill(NovaStyle.keyFill(isDark)))
         }
         .buttonStyle(PlainButtonStyle())
         .simultaneousGesture(
@@ -295,7 +295,7 @@ extension NovaKeyboardView {
                             .foregroundColor(idx == selectedAltIndex ? .black : (isDark ? .white : .black))
                             .frame(width: 32, height: 38)
                             .background(
-                                RoundedRectangle(cornerRadius: 5)
+                                RoundedRectangle(cornerRadius: NovaStyle.cornerRadius)
                                     .fill(idx == selectedAltIndex ? Color(red: 0, green: 0.8, blue: 0.85) : (isDark ? Color(white: 0.2) : Color.white))
                             )
                     }

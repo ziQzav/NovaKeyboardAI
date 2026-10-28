@@ -3,36 +3,36 @@ import SwiftUI
 extension NovaKeyboardView {
 
     var lettersPage: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 3) {
+        VStack(spacing: NovaStyle.rowSpacing) {
+            HStack(spacing: NovaStyle.keySpacing) {
                 ForEach(cachedRow1, id: \.self) { key in charKey(key) }
-            }.padding(.horizontal, 3).frame(height: customKeyHeight)
+            }.padding(.horizontal, NovaStyle.keySpacing).frame(height: customKeyHeight)
 
-            HStack(spacing: 3) {
+            HStack(spacing: NovaStyle.keySpacing) {
                 ForEach(cachedRow2, id: \.self) { key in charKey(key) }
-            }.padding(.horizontal, 3).frame(height: customKeyHeight)
+            }.padding(.horizontal, NovaStyle.keySpacing).frame(height: customKeyHeight)
 
-            HStack(spacing: 3) {
+            HStack(spacing: NovaStyle.keySpacing) {
                 shiftButton
 
                 ForEach(cachedRow3, id: \.self) { key in charKey(key) }
 
                 deleteButton
-            }.padding(.horizontal, 3).frame(height: customKeyHeight)
+            }.padding(.horizontal, NovaStyle.keySpacing).frame(height: customKeyHeight)
         }
     }
 
     var numbersPage: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 3) {
+        VStack(spacing: NovaStyle.rowSpacing) {
+            HStack(spacing: NovaStyle.keySpacing) {
                 ForEach(KeyboardLayouts.numRow1, id: \.self) { key in specialCharKey(key) }
-            }.padding(.horizontal, 3).frame(height: customKeyHeight)
+            }.padding(.horizontal, NovaStyle.keySpacing).frame(height: customKeyHeight)
 
-            HStack(spacing: 3) {
+            HStack(spacing: NovaStyle.keySpacing) {
                 ForEach(KeyboardLayouts.numRow2, id: \.self) { key in specialCharKey(key) }
-            }.padding(.horizontal, 3).frame(height: customKeyHeight)
+            }.padding(.horizontal, NovaStyle.keySpacing).frame(height: customKeyHeight)
 
-            HStack(spacing: 3) {
+            HStack(spacing: NovaStyle.keySpacing) {
                 Button {
                     playKeySound()
                     currentPage = .symbols
@@ -47,21 +47,21 @@ extension NovaKeyboardView {
                 ForEach(KeyboardLayouts.numRow3, id: \.self) { key in specialCharKey(key) }
 
                 deleteButton
-            }.padding(.horizontal, 3).frame(height: customKeyHeight)
+            }.padding(.horizontal, NovaStyle.keySpacing).frame(height: customKeyHeight)
         }
     }
 
     var symbolsPage: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 3) {
+        VStack(spacing: NovaStyle.rowSpacing) {
+            HStack(spacing: NovaStyle.keySpacing) {
                 ForEach(KeyboardLayouts.symRow1, id: \.self) { key in specialCharKey(key) }
-            }.padding(.horizontal, 3).frame(height: customKeyHeight)
+            }.padding(.horizontal, NovaStyle.keySpacing).frame(height: customKeyHeight)
 
-            HStack(spacing: 3) {
+            HStack(spacing: NovaStyle.keySpacing) {
                 ForEach(KeyboardLayouts.symRow2, id: \.self) { key in specialCharKey(key) }
-            }.padding(.horizontal, 3).frame(height: customKeyHeight)
+            }.padding(.horizontal, NovaStyle.keySpacing).frame(height: customKeyHeight)
 
-            HStack(spacing: 3) {
+            HStack(spacing: NovaStyle.keySpacing) {
                 Button {
                     playKeySound()
                     currentPage = .numbers
@@ -76,7 +76,7 @@ extension NovaKeyboardView {
                 ForEach(KeyboardLayouts.symRow3, id: \.self) { key in specialCharKey(key) }
 
                 deleteButton
-            }.padding(.horizontal, 3).frame(height: customKeyHeight)
+            }.padding(.horizontal, NovaStyle.keySpacing).frame(height: customKeyHeight)
         }
     }
 

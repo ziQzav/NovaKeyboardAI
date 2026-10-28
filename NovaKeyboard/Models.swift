@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 enum KeyboardPage {
     case letters
@@ -332,5 +333,35 @@ enum NovaActionStore {
             .replacingOccurrences(of: "{{LANG}}", with: language)
             .replacingOccurrences(of: "{{TARGET}}", with: target)
             .replacingOccurrences(of: "{{TONE}}", with: tone)
+    }
+}
+
+// MARK: - System-style palette
+
+/// Colours and metrics that mirror the stock iOS keyboard.
+enum NovaStyle {
+    static let cornerRadius: CGFloat = 5
+    static let keySpacing: CGFloat = 6
+    static let rowSpacing: CGFloat = 12
+    static let letterSize: CGFloat = 25
+
+    static func background(_ dark: Bool) -> Color {
+        dark ? Color(white: 0.117) : Color(red: 0.819, green: 0.827, blue: 0.847)
+    }
+
+    static func keyFill(_ dark: Bool) -> Color {
+        dark ? Color(white: 0.42) : .white
+    }
+
+    static func specialFill(_ dark: Bool) -> Color {
+        dark ? Color(white: 0.235) : Color(red: 0.678, green: 0.698, blue: 0.729)
+    }
+
+    static func pressed(_ dark: Bool) -> Color {
+        dark ? Color(white: 0.62) : Color(white: 0.86)
+    }
+
+    static func keyShadow(_ dark: Bool) -> Color {
+        dark ? .clear : Color.black.opacity(0.35)
     }
 }

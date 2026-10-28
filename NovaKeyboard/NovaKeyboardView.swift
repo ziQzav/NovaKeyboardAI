@@ -75,7 +75,7 @@ struct NovaKeyboardView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(isDark ? Color(red: 0.07, green: 0.07, blue: 0.1) : Color(red: 0.82, green: 0.83, blue: 0.85))
+        .background(NovaStyle.background(isDark))
         .simultaneousGesture(
             DragGesture(minimumDistance: 50)
                 .onEnded { value in

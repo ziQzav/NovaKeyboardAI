@@ -52,11 +52,12 @@ struct CharKeyView: View {
 
     var body: some View {
         Text(displayChar)
-            .font(.system(size: customFontSize, weight: .regular, design: .rounded))
+            .font(.system(size: max(customFontSize, NovaStyle.letterSize), weight: .regular))
             .foregroundColor(isDark ? .white : .black)
             .frame(maxWidth: .infinity).frame(height: customKeyHeight)
             .background(
-                RoundedRectangle(cornerRadius: 5).fill(keyBackground)
+                RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fill(keyBackground)
+                    .shadow(color: NovaStyle.keyShadow(isDark), radius: 0, x: 0, y: 1)
             )
             .contentShape(Rectangle())
             .gesture(
@@ -138,13 +139,10 @@ struct CharKeyView: View {
     }
 
     private var keyBackground: Color {
-        if isHighlighted {
-            return Color(red: 0, green: 0.8, blue: 0.85).opacity(0.25)
+        if isHighlighted || longPressKey == key {
+            return NovaStyle.pressed(isDark)
         }
-        if longPressKey == key {
-            return Color(red: 0, green: 0.8, blue: 0.85).opacity(0.3)
-        }
-        return isDark ? Color.white.opacity(0.1) : Color.white
+        return NovaStyle.keyFill(isDark)
     }
 }
 
@@ -169,13 +167,12 @@ struct SpecialCharKeyView: View {
 
     var body: some View {
         Text(key)
-            .font(.system(size: customFontSize, weight: .regular))
+            .font(.system(size: max(customFontSize, NovaStyle.letterSize), weight: .regular))
             .foregroundColor(isDark ? .white : .black)
             .frame(maxWidth: .infinity).frame(height: customKeyHeight)
-            .background(RoundedRectangle(cornerRadius: 5).fill(
-                isHighlighted ? Color(red: 0, green: 0.8, blue: 0.85).opacity(0.2)
-                : (isDark ? Color.white.opacity(0.1) : Color.white)
-            ))
+            .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fill(
+                isHighlighted ? NovaStyle.pressed(isDark) : NovaStyle.keyFill(isDark)
+            ).shadow(color: NovaStyle.keyShadow(isDark), radius: 0, x: 0, y: 1))
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0)
