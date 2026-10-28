@@ -231,9 +231,8 @@ struct DeleteKeyView: View {
             .font(.system(size: 15))
             .foregroundColor(isDark ? .white : .black)
             .frame(width: 44, height: customKeyHeight)
-            .background(RoundedRectangle(cornerRadius: 5).fill(
-                isHighlighted ? Color.red.opacity(0.2)
-                : (isDark ? Color.white.opacity(0.15) : Color(white: 0.72))
+            .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fill(
+                isHighlighted ? NovaStyle.pressed(isDark) : NovaStyle.specialFill(isDark)
             ))
             .contentShape(Rectangle().inset(by: -4))
             .gesture(

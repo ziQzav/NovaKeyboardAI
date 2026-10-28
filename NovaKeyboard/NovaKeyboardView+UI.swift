@@ -91,7 +91,7 @@ extension NovaKeyboardView {
                     .font(.system(size: 15, weight: .regular))
                     .foregroundColor(isDark ? .white : .black)
                     .frame(width: 40, height: customKeyHeight)
-                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fillNovaStyle.specialFill(isDark))
+                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fill(NovaStyle.specialFill(isDark)))
             }.buttonStyle(PlainButtonStyle())
 
             Button {
@@ -102,7 +102,7 @@ extension NovaKeyboardView {
                     .font(.system(size: 16))
                     .foregroundColor(isDark ? .white : .black)
                     .frame(width: 36, height: customKeyHeight)
-                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fillNovaStyle.specialFill(isDark))
+                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fill(NovaStyle.specialFill(isDark)))
             }.buttonStyle(PlainButtonStyle())
 
             Button { controller.advanceToNextInputMode() } label: {
@@ -110,7 +110,7 @@ extension NovaKeyboardView {
                     .font(.system(size: 16))
                     .foregroundColor(isDark ? .white : .black)
                     .frame(width: 36, height: customKeyHeight)
-                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fillNovaStyle.specialFill(isDark))
+                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fill(NovaStyle.specialFill(isDark)))
             }.buttonStyle(PlainButtonStyle())
 
             Button {
@@ -121,7 +121,7 @@ extension NovaKeyboardView {
                     .font(.system(size: 18))
                     .foregroundColor(isDark ? .white : .black)
                     .frame(width: 28, height: customKeyHeight)
-                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fillNovaStyle.specialFill(isDark))
+                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fill(NovaStyle.specialFill(isDark)))
             }.buttonStyle(PlainButtonStyle())
 
             spaceBar
@@ -136,7 +136,7 @@ extension NovaKeyboardView {
                     .font(.system(size: 18))
                     .foregroundColor(isDark ? .white : .black)
                     .frame(width: 28, height: customKeyHeight)
-                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fillNovaStyle.specialFill(isDark))
+                    .background(RoundedRectangle(cornerRadius: NovaStyle.cornerRadius).fill(NovaStyle.specialFill(isDark)))
             }.buttonStyle(PlainButtonStyle())
 
             Button {
