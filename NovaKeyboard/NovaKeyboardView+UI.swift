@@ -8,7 +8,13 @@ extension NovaKeyboardView {
             if isProcessing {
                 ProgressView().scaleEffect(0.5).accentColor(Color(red: 0, green: 0.8, blue: 0.85))
             } else {
-                Image(systemName: "sparkles").foregroundColor(Color(red: 0, green: 0.8, blue: 0.85)).font(.system(size: 7))
+                Button {
+                    novaActions = NovaActionStore.loadEnabled()
+                    withAnimation(.easeOut(duration: 0.15)) { showActionMenu.toggle() }
+                } label: {
+                    Image(systemName: "sparkles").foregroundColor(Color(red: 0, green: 0.8, blue: 0.85)).font(.system(size: 7))
+                }
+                .buttonStyle(PlainButtonStyle())
             }
             Text(statusMessage)
                 .font(.system(size: 8, design: .monospaced))
@@ -202,6 +208,45 @@ extension NovaKeyboardView {
                     lastCursorOffset = 0
                 }
         )
+    }
+
+    var actionMenuOverlay: some View {
+        VStack {
+            HStack(spacing: 6) {
+                ForEach(novaActions) { action in
+                    Button {
+                        withAnimation(.easeOut(duration: 0.15)) { showActionMenu = false }
+                        if action.id == "tone" {
+                            showToneMenu = true
+                        } else {
+                            runAction(action)
+                        }
+                    } label: {
+                        Text(action.title)
+                            .font(.system(size: 10, weight: .bold))
+                            .padding(.horizontal, 8).padding(.vertical, 5)
+                            .background(isDark ? Color(white: 0.2) : Color(white: 0.85))
+                            .foregroundColor(isDark ? .white : .black)
+                            .cornerRadius(6)
+                    }
+                }
+
+                Button {
+                    withAnimation(.easeOut(duration: 0.15)) { showActionMenu = false }
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(isDark ? .white.opacity(0.5) : .black.opacity(0.3))
+                        .font(.system(size: 16))
+                }
+            }
+            .padding(.horizontal, 10).padding(.vertical, 8)
+            .background((isDark ? Color(white: 0.12) : Color.white).cornerRadius(10))
+            .shadow(color: (isDark ? Color.black : Color.black.opacity(0.15)), radius: 5)
+            .padding(.top, 2)
+
+            Spacer()
+        }
+        .transition(.opacity)
     }
 
     var toneMenuOverlay: some View {

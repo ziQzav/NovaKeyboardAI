@@ -107,6 +107,12 @@ enum AppGroupKeys {
     static let hapticFeedback = "haptic_feedback"
     static let groqApiKey = "groq_api_key"
     static let textShortcuts = "text_shortcuts"
+
+    // Generic OpenAI-compatible endpoint (replaces the Groq-only setup).
+    static let apiBaseURL = "api_base_url"
+    static let apiModel = "api_model"
+    static let apiKey = "api_key"
+    static let aiActions = "ai_actions"
 }
 
 extension Notification.Name {
@@ -225,5 +231,106 @@ enum SharedSettings {
         }
         // Fallback: app's own documents (won't be shared, but at least won't crash)
         return nil
+    }
+}
+
+// MARK: - Configurable AI actions
+
+/// One button/gesture in the keyboard's AI menu.
+/// `prompt` is the template sent to the model. Placeholders are replaced at run time:
+///   {{TEXT}}   selected / current input text
+///   {{LANG}}   native language chosen in the app
+///   {{TARGET}} target language chosen in the app
+///   {{TONE}}   tone picked in the keyboard menu
+struct NovaAction: Codable, Identifiable, Equatable {
+    var id: String
+    var title: String
+    var prompt: String
+    var enabled: Bool
+
+    init(id: String = UUID().uuidString, title: String, prompt: String, enabled: Bool = true) {
+        self.id = id
+        self.title = title
+        self.prompt = prompt
+        self.enabled = enabled
+    }
+
+    static let defaults: [NovaAction] = [
+        NovaAction(
+            id: "tone",
+            title: "Tone",
+            prompt: """
+            Rewrite the text in a {{TONE}} tone. Keep the meaning, do not add new facts. Return ONLY the rewritten text.
+
+            {{TEXT}}
+            """
+        ),
+        NovaAction(
+            id: "translate",
+            title: "Translate",
+            prompt: """
+            Translate the following text from {{LANG}} to {{TARGET}}. Return ONLY the translation.
+
+            {{TEXT}}
+            """
+        ),
+        NovaAction(
+            id: "spell",
+            title: "Fix",
+            prompt: """
+            The text is written in {{LANG}}. Fix spelling and grammar only, do not translate and do not use other languages. Keep the same meaning and tone. Return ONLY the corrected text.
+
+            {{TEXT}}
+            """
+        ),
+        NovaAction(
+            id: "reply",
+            title: "Reply",
+            prompt: """
+            Write a short, natural reply to the message below in {{LANG}}. Return ONLY the reply.
+
+            {{TEXT}}
+            """
+        )
+    ]
+}
+
+enum NovaActionStore {
+
+    /// Reads the action list written by the host app. Falls back to the built-in set.
+    static func load() -> [NovaAction] {
+        guard let raw = SharedSettings.string(forKey: AppGroupKeys.aiActions),
+              let data = raw.data(using: .utf8),
+              let decoded = try? JSONDecoder().decode([NovaAction].self, from: data),
+              !decoded.isEmpty else {
+            return NovaAction.defaults
+        }
+        return decoded
+    }
+
+    static func loadEnabled() -> [NovaAction] {
+        let all = load().filter { $0.enabled }
+        return all.isEmpty ? NovaAction.defaults : all
+    }
+
+    static func save(_ actions: [NovaAction]) {
+        guard let data = try? JSONEncoder().encode(actions),
+              let raw = String(data: data, encoding: .utf8) else { return }
+        SharedSettings.save([AppGroupKeys.aiActions: raw])
+    }
+
+    static func encoded(_ actions: [NovaAction]) -> String {
+        guard let data = try? JSONEncoder().encode(actions),
+              let raw = String(data: data, encoding: .utf8) else { return "" }
+        return raw
+    }
+
+    /// Fills the template placeholders.
+    static func render(_ action: NovaAction, text: String, language: String, target: String, tone: String) -> String {
+        action.prompt
+            .replacingOccurrences(of: "{{TEXT}}", with: text)
+            .replacingOccurrences(of: "{{LANG}}", with: language)
+            .replacingOccurrences(of: "{{TARGET}}", with: target)
+            .replacingOccurrences(of: "{{TONE}}", with: tone)
     }
 }

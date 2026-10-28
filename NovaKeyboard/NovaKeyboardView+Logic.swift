@@ -28,77 +28,60 @@ extension NovaKeyboardView {
         }
     }
 
-    func rewriteText(tone: String) {
+    /// Runs one configured action against the text currently in the input field.
+    func runAction(_ action: NovaAction, tone: String? = nil) {
         guard !isProcessing else { return }
         guard controller.hasFullAccess else {
             requestFullAccess()
             return
         }
         let text = engine.contextBeforeInput
-        guard !text.isEmpty else { return }
-        isProcessing = true
-        statusMessage = "Rewriting..."
-
-        let signpostID = OSSignpostID(log: aiLog)
-        os_signpost(.begin, log: aiLog, name: "RewriteRequest", signpostID: signpostID)
-
-        NovaAIEngine.shared.request(
-            prompt: "Rewrite this text to be more \(tone). Return ONLY the rewritten text, nothing else: \(text)"
-        ) { result in
-            os_signpost(.end, log: aiLog, name: "RewriteRequest", signpostID: signpostID)
-            self.applyResult(result, originalText: text)
-        }
-    }
-
-    func translateText(_ text: String) {
-        guard !isProcessing else { return }
-        guard controller.hasFullAccess else {
-            requestFullAccess()
-            return
-        }
-
-        let nativeLang = SharedSettings.string(forKey: AppGroupKeys.nativeLanguage) ?? "Turkish"
-        let targetLang = SharedSettings.string(forKey: AppGroupKeys.targetLanguage) ?? "English"
-
-        if nativeLang.lowercased() == targetLang.lowercased() {
-            statusMessage = "Same language — cancelled"
+        guard !text.isEmpty else {
+            statusMessage = "Type something first"
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self.statusMessage = "Nova AI Ready" }
             return
         }
 
+        let lang = SharedSettings.string(forKey: AppGroupKeys.nativeLanguage) ?? "Turkish"
+        let target = SharedSettings.string(forKey: AppGroupKeys.targetLanguage) ?? "English"
+        let prompt = NovaActionStore.render(
+            action,
+            text: text,
+            language: lang,
+            target: target,
+            tone: tone ?? selectedTone
+        )
+
         isProcessing = true
-        statusMessage = "Translating..."
+        statusMessage = "\(action.title)..."
 
         let signpostID = OSSignpostID(log: aiLog)
-        os_signpost(.begin, log: aiLog, name: "TranslateRequest", signpostID: signpostID, "Started translation for %d chars", text.count)
-
-        NovaAIEngine.shared.request(
-            prompt: "Translate the following text from \(nativeLang) to \(targetLang). Return ONLY the translation, nothing else: \(text)"
-        ) { result in
-            os_signpost(.end, log: aiLog, name: "TranslateRequest", signpostID: signpostID, "Finished translation")
+        os_signpost(.begin, log: aiLog, name: "ActionRequest", signpostID: signpostID)
+        NovaAIEngine.shared.request(prompt: prompt) { result in
+            os_signpost(.end, log: aiLog, name: "ActionRequest", signpostID: signpostID)
             self.applyResult(result, originalText: text)
         }
     }
 
+    /// Looks up an action by id from the user's configuration, falling back to the built-in one.
+    func configuredAction(id: String) -> NovaAction? {
+        if let match = NovaActionStore.load().first(where: { $0.id == id }) { return match }
+        return NovaAction.defaults.first(where: { $0.id == id })
+    }
+
+    func rewriteText(tone: String) {
+        guard let action = configuredAction(id: "tone") else { return }
+        runAction(action, tone: tone)
+    }
+
+    func translateText(_ text: String) {
+        guard let action = configuredAction(id: "translate") else { return }
+        runAction(action)
+    }
+
     func spellCheckText(_ text: String) {
-        guard !isProcessing else { return }
-        guard controller.hasFullAccess else {
-            requestFullAccess()
-            return
-        }
-        isProcessing = true
-        statusMessage = "Fixing..."
-
-        let lang = SharedSettings.string(forKey: AppGroupKeys.nativeLanguage) ?? "Turkish"
-        let prompt = "The text was written in \(lang). Fix spelling and grammar only in \(lang). Do not translate or use words from other languages. Keep the same meaning and tone. Return ONLY the corrected text, nothing else: \(text)"
-
-        let signpostID = OSSignpostID(log: aiLog)
-        os_signpost(.begin, log: aiLog, name: "SpellCheckRequest", signpostID: signpostID)
-
-        NovaAIEngine.shared.request(prompt: prompt) { result in
-            os_signpost(.end, log: aiLog, name: "SpellCheckRequest", signpostID: signpostID)
-            self.applyResult(result, originalText: text)
-        }
+        guard let action = configuredAction(id: "spell") else { return }
+        runAction(action)
     }
 
     func applyResult(_ result: Result<String, NovaAIEngine.AIError>, originalText: String) {
@@ -121,6 +104,7 @@ extension NovaKeyboardView {
             case .rateLimited:        statusMessage = "Rate limited. Wait a moment."
             case .serverError(let c): statusMessage = "Server error (\(c))"
             case .parseError:         statusMessage = "Error. Try again."
+            case .noEndpoint:         statusMessage = "No API URL — set it in Nova app"
             }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { self.statusMessage = "Nova AI Ready" }

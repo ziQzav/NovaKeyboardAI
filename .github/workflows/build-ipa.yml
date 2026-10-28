@@ -1,0 +1,50 @@
+name: build-ipa
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: xcodebuild -version
+
+      - name: Build (unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project NovaKeyboardAI.xcodeproj \
+            -target NovaKeyboardAI \
+            -sdk iphoneos \
+            -configuration Release \
+            SYMROOT="$RUNNER_TEMP/out" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            ARCHS=arm64 \
+            build | tail -60
+
+      - name: Package IPA
+        run: |
+          APP="$RUNNER_TEMP/out/Release-iphoneos/NovaKeyboardAI.app"
+          test -d "$APP"
+          ls -la "$APP" "$APP/PlugIns"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :NSExtension:NSExtensionAttributes:PrimaryLanguage' "$APP/PlugIns/NovaKeyboard.appex/Info.plist"
+          mkdir -p "$RUNNER_TEMP/Payload"
+          cp -R "$APP" "$RUNNER_TEMP/Payload/"
+          cd "$RUNNER_TEMP"
+          zip -qry NovaKeyboardAI-unsigned.ipa Payload
+          ls -lh NovaKeyboardAI-unsigned.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NovaKeyboardAI-unsigned-ipa
+          path: ${{ runner.temp }}/NovaKeyboardAI-unsigned.ipa
+          retention-days: 14

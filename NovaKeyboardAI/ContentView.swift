@@ -11,8 +11,10 @@ struct ContentView: View {
     @State private var fontSize: Double = 22
     @State private var keySounds: Bool = true
     @State private var hapticFeedback: Bool = true
-    @State private var groqApiKey: String = ""
-    @State private var showSafari = false
+    @State private var apiBaseURL: String = ""
+    @State private var apiModel: String = ""
+    @State private var apiKey: String = ""
+    @State private var actions: [NovaAction] = NovaAction.defaults
     @State private var shortcuts: [String: String] = [:]
     @State private var newTrigger: String = ""
     @State private var newReplacement: String = ""
@@ -166,20 +168,43 @@ struct ContentView: View {
                         }
                     }
                     
-                    // AI Configuration
-                    settingsCard(title: "AI Configuration", icon: "cpu") {
+                    // AI Configuration (any OpenAI-compatible endpoint)
+                    settingsCard(title: "AI Endpoint", icon: "cpu") {
                         VStack(spacing: 12) {
-                            SecureField("Groq API Key", text: $groqApiKey)
+                            TextField("Base URL (https://api.openai.com/v1)", text: $apiBaseURL)
                                 .textFieldStyle(PlainTextFieldStyle())
+                                .keyboardType(.URL)
+                                .autocapitalization(.none)
+                                .disableAutocorrection(true)
                                 .padding(10)
                                 .background(Color.white.opacity(0.1))
                                 .cornerRadius(8)
                                 .foregroundColor(.white)
-                            
-                            Button { showSafari = true } label: {
+
+                            TextField("Model (gpt-4o-mini, llama-3.3-70b-versatile, ...)", text: $apiModel)
+                                .textFieldStyle(PlainTextFieldStyle())
+                                .autocapitalization(.none)
+                                .disableAutocorrection(true)
+                                .padding(10)
+                                .background(Color.white.opacity(0.1))
+                                .cornerRadius(8)
+                                .foregroundColor(.white)
+
+                            SecureField("API Key (leave empty for a local server)", text: $apiKey)
+                                .textFieldStyle(PlainTextFieldStyle())
+                                .autocapitalization(.none)
+                                .disableAutocorrection(true)
+                                .padding(10)
+                                .background(Color.white.opacity(0.1))
+                                .cornerRadius(8)
+                                .foregroundColor(.white)
+
+                            Button {
+                                runTest(isTranslate: false)
+                            } label: {
                                 HStack {
-                                    Image(systemName: "link")
-                                    Text("Get Free Key from Groq")
+                                    Image(systemName: "bolt.horizontal.circle")
+                                    Text("Test Connection")
                                 }
                                 .font(.system(size: 15, weight: .bold))
                                 .frame(maxWidth: .infinity)
@@ -188,35 +213,99 @@ struct ContentView: View {
                                 .foregroundColor(.black)
                                 .cornerRadius(8)
                             }
-                            .sheet(isPresented: $showSafari, onDismiss: {
-                                if let clip = UIPasteboard.general.string, clip.hasPrefix("gsk_") {
-                                    groqApiKey = clip
-                                    saveSettings()
+
+                            if !testResult.isEmpty {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(testResult)
+                                        .font(.system(size: 11, design: .monospaced))
+                                        .foregroundColor(testResult.hasPrefix("Error") ? .orange : .green)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    if !testLatency.isEmpty {
+                                        Text(testLatency)
+                                            .font(.system(size: 10))
+                                            .foregroundColor(.white.opacity(0.4))
+                                    }
                                 }
-                            }) {
-                                if let url = URL(string: "https://console.groq.com/keys") {
-                                    SafariView(url: url)
-                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                            
-                            Text("Klavyede Tam Erişim (Full Access) açık olmalı; kapalıysa Groq anahtarı klavye tarafında görünmez (App Group kısıtı).")
+
+                            Text("Any OpenAI-compatible /chat/completions server works: OpenAI, Groq, OpenRouter, Ollama, LM Studio, or your own. The key stays on the device.")
                                 .font(.system(size: 10))
                                 .foregroundColor(.orange.opacity(0.85))
                                 .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
 
-                            if !groqApiKey.isEmpty {
-                                HStack {
-                                    Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
-                                    Text("API Key Connected").font(.caption).foregroundColor(.green)
+                    // Configurable AI buttons
+                    settingsCard(title: "AI Buttons", icon: "square.grid.2x2") {
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("Up-swipe opens these buttons on the keyboard. {{TEXT}} {{LANG}} {{TARGET}} {{TONE}} are replaced at run time.")
+                                .font(.system(size: 10))
+                                .foregroundColor(.white.opacity(0.45))
+                                .fixedSize(horizontal: false, vertical: true)
+
+                            ForEach(actions.indices, id: \.self) { i in
+                                VStack(alignment: .leading, spacing: 6) {
+                                    HStack {
+                                        Toggle(isOn: $actions[i].enabled) {
+                                            TextField("Title", text: $actions[i].title)
+                                                .textFieldStyle(PlainTextFieldStyle())
+                                                .foregroundColor(.white)
+                                                .autocapitalization(.none)
+                                        }
+                                        .accentColor(Color(red: 0, green: 0.8, blue: 0.85))
+
+                                        Button {
+                                            actions.remove(at: i)
+                                            NovaActionStore.save(actions)
+                                        } label: {
+                                            Image(systemName: "trash")
+                                                .foregroundColor(.red.opacity(0.8))
+                                        }
+                                    }
+
+                                    TextEditor(text: $actions[i].prompt)
+                                        .font(.system(size: 11, design: .monospaced))
+                                        .frame(height: 78)
+                                        .padding(6)
+                                        .background(Color.white.opacity(0.08))
+                                        .cornerRadius(6)
+                                        .foregroundColor(.white)
+                                        .disableAutocorrection(true)
+                                        .autocapitalization(.none)
                                 }
-                            } else {
-                                Text("Copy your key after creating it. It will be auto-detected.")
-                                    .font(.system(size: 10))
-                                    .foregroundColor(.white.opacity(0.4))
+                                .padding(10)
+                                .background(Color.white.opacity(0.04))
+                                .cornerRadius(10)
+                            }
+
+                            HStack(spacing: 10) {
+                                Button {
+                                    actions.append(NovaAction(
+                                        title: "New",
+                                        prompt: "Do something with this text and return ONLY the result:\n\n{{TEXT}}"
+                                    ))
+                                    NovaActionStore.save(actions)
+                                } label: {
+                                    Label("Add", systemImage: "plus.circle.fill")
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundColor(Color(red: 0, green: 0.8, blue: 0.85))
+                                }
+
+                                Spacer()
+
+                                Button {
+                                    actions = NovaAction.defaults
+                                    NovaActionStore.save(actions)
+                                } label: {
+                                    Label("Reset", systemImage: "arrow.counterclockwise")
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundColor(.white.opacity(0.6))
+                                }
                             }
                         }
                     }
-                    
+
                     // Text Shortcuts
                     settingsCard(title: "Text Shortcuts", icon: "bolt.fill") {
                         VStack(spacing: 10) {
@@ -358,7 +447,10 @@ struct ContentView: View {
         .onChange(of: fontSize) { _ in saveSettings() }
         .onChange(of: keySounds) { _ in saveSettings() }
         .onChange(of: hapticFeedback) { _ in saveSettings() }
-        .onChange(of: groqApiKey) { _ in saveSettings() }
+        .onChange(of: apiBaseURL) { _ in saveSettings() }
+        .onChange(of: apiModel) { _ in saveSettings() }
+        .onChange(of: apiKey) { _ in saveSettings() }
+        .onChange(of: actions) { _ in NovaActionStore.save(actions) }
     }
     
     // MARK: - Settings Card
@@ -398,7 +490,11 @@ struct ContentView: View {
         fontSize = SharedSettings.double(forKey: AppGroupKeys.fontSize) ?? 22
         keySounds = SharedSettings.bool(forKey: AppGroupKeys.keySounds, defaultValue: true)
         hapticFeedback = SharedSettings.bool(forKey: AppGroupKeys.hapticFeedback, defaultValue: true)
-        groqApiKey = (SharedSettings.string(forKey: AppGroupKeys.groqApiKey) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        apiBaseURL = SharedSettings.string(forKey: AppGroupKeys.apiBaseURL) ?? ""
+        apiModel = SharedSettings.string(forKey: AppGroupKeys.apiModel) ?? ""
+        apiKey = SharedSettings.string(forKey: AppGroupKeys.apiKey)
+            ?? (SharedSettings.string(forKey: AppGroupKeys.groqApiKey) ?? "")
+        actions = NovaActionStore.load()
         
         if keyboardHeight < 180 { keyboardHeight = 216 }
         if keyHeight < 30 { keyHeight = 42 }
@@ -413,7 +509,9 @@ struct ContentView: View {
     }
     
     func saveSettings() {
-        groqApiKey = groqApiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        apiBaseURL = apiBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        apiModel = apiModel.trimmingCharacters(in: .whitespacesAndNewlines)
+        apiKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         SharedSettings.save([
             AppGroupKeys.nativeLanguage: nativeLanguage,
             AppGroupKeys.targetLanguage: targetLanguage,
@@ -423,7 +521,9 @@ struct ContentView: View {
             AppGroupKeys.fontSize: fontSize,
             AppGroupKeys.keySounds: keySounds,
             AppGroupKeys.hapticFeedback: hapticFeedback,
-            AppGroupKeys.groqApiKey: groqApiKey
+            AppGroupKeys.apiBaseURL: apiBaseURL,
+            AppGroupKeys.apiModel: apiModel,
+            AppGroupKeys.apiKey: apiKey
         ])
     }
     
@@ -435,46 +535,59 @@ struct ContentView: View {
     }
     
     func runTest(isTranslate: Bool) {
-        guard !testText.isEmpty else { return }
-        guard !groqApiKey.isEmpty else {
-            testResult = "Error: API Key missing"
+        guard !testText.isEmpty else {
+            testResult = "Type something to test first"
             return
         }
+        guard !apiBaseURL.isEmpty else {
+            testResult = "Error: Base URL missing"
+            return
+        }
+
+        var trimmed = apiBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.lowercased().hasPrefix("http") { trimmed = "https://" + trimmed }
+        while trimmed.hasSuffix("/") { trimmed.removeLast() }
+        if !trimmed.lowercased().hasSuffix("/chat/completions") {
+            trimmed += trimmed.lowercased().hasSuffix("/v1") ? "/chat/completions" : "/v1/chat/completions"
+        }
+        guard let url = URL(string: trimmed) else {
+            testResult = "Error: invalid Base URL"
+            return
+        }
+
         testResult = "Testing..."
         testLatency = ""
         let start = Date()
-        
-        let prompt: String
-        if isTranslate {
-            prompt = "Translate from \(nativeLanguage) to \(targetLanguage): \(testText). Return ONLY the translation."
-        } else {
-            prompt = "Fix spelling in \(nativeLanguage): \(testText). Return ONLY the corrected text."
-        }
-        
-        let endpoint = "https://api.groq.com/openai/v1/chat/completions"
-        let body: [String: Any] = [
-            "model": "llama-3.3-70b-versatile",
-            "messages": [["role": "user", "content": prompt]],
-            "temperature": 0.7,
-            "max_tokens": 500
-        ]
-        
-        guard let url = URL(string: endpoint),
-              let jsonData = try? JSONSerialization.data(withJSONObject: body) else { return }
-        
+
+        let prompt = isTranslate
+            ? "Translate from \(nativeLanguage) to \(targetLanguage): \(testText). Return ONLY the translation."
+            : "Fix spelling in \(nativeLanguage): \(testText). Return ONLY the corrected text."
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.addValue("Bearer \(groqApiKey)", forHTTPHeaderField: "Authorization")
-        request.httpBody = jsonData
-        request.timeoutInterval = 15
-        
-        URLSession.shared.dataTask(with: request) { data, _, error in
+        if !apiKey.isEmpty {
+            request.addValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+        let body: [String: Any] = [
+            "model": apiModel.isEmpty ? "gpt-4o-mini" : apiModel,
+            "messages": [["role": "user", "content": prompt]],
+            "temperature": 0.7,
+            "max_tokens": 300
+        ]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        request.timeoutInterval = 20
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
             let diff = Int(Date().timeIntervalSince(start) * 1000)
             DispatchQueue.main.async {
                 testLatency = "\(diff) ms latency"
-                if let _ = error {
-                    testResult = "Network Error"
+                if error != nil {
+                    testResult = "Error: network unreachable"
+                    return
+                }
+                if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+                    testResult = "Error: HTTP \(http.statusCode)"
                     return
                 }
                 guard let data = data,
@@ -482,7 +595,10 @@ struct ContentView: View {
                       let choices = json["choices"] as? [[String: Any]],
                       let message = choices.first?["message"] as? [String: Any],
                       let text = message["content"] as? String else {
-                testResult = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                    testResult = "Error: unexpected response"
+                    return
+                }
+                testResult = "OK → " + text.trimmingCharacters(in: .whitespacesAndNewlines)
             }
         }.resume()
     }

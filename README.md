@@ -1,5 +1,18 @@
 # Nova Keyboard AI 🧠⌨️
 
+> **Fork bilgisi / Fork notice**
+> Bu depo [Son3ra1n/NovaKeyboardAI](https://github.com/Son3ra1n/NovaKeyboardAI) projesinin bir fork'udur (MIT).
+> Upstream kodu ve tasarımı ona aittir. Bu fork'ta yapılan değişiklikler:
+>
+> 1. **Sağlayıcıdan bağımsız AI**: sabit Groq ucu yerine uygulamadan girilen herhangi bir OpenAI-uyumlu `base URL` + `model` + `API key` (OpenAI, OpenRouter, Groq, Ollama, LM Studio, kendi sunucunuz).
+> 2. **Ayarlanabilir AI butonları**: klavyede yukarı kaydırınca açılan menüdeki butonların başlığı, prompt'u ve açık/kapalı durumu uygulamadan düzenlenir (`{{TEXT}}`, `{{LANG}}`, `{{TARGET}}`, `{{TONE}}` yer tutucuları).
+> 3. **ATS**: özel/yerel uç noktalar için `NSAllowsArbitraryLoads` açıldı.
+> 4. **İmzasız derleme**: `.github/workflows/build-ipa.yml` ile GitHub Actions üzerinde imzasız `.ipa` üretimi (Sideloadly/AltStore için).
+>
+> Upstream lisans ve telif metni `LICENSE` dosyasında korunmuştur.
+
+
+
 <p align="center">
   <img src="assets/banner.png" width="100%" alt="Nova Keyboard AI Banner">
 </p>

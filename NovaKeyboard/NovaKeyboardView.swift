@@ -9,6 +9,8 @@ struct NovaKeyboardView: View {
     @State var statusMessage = "Nova AI Ready"
     @State var clipboardContent: String? = nil
     @State var showToneMenu = false
+    @State var showActionMenu = false
+    @State var novaActions: [NovaAction] = NovaAction.defaults
     @State var selectedTone = "Professional"
     @State var isShifted = false
     @State var isCapsLocked = false
@@ -60,6 +62,10 @@ struct NovaKeyboardView: View {
                 bottomRow
             }
 
+            if showActionMenu {
+                actionMenuOverlay
+            }
+
             if showToneMenu {
                 toneMenuOverlay
             }
@@ -78,7 +84,8 @@ struct NovaKeyboardView: View {
                     guard now.timeIntervalSince(lastAISwipeTime) >= Self.aiCooldown else { return }
 
                     if value.translation.height < -60 {
-                        withAnimation(.easeOut(duration: 0.15)) { showToneMenu = true }
+                        novaActions = NovaActionStore.loadEnabled()
+                        withAnimation(.easeOut(duration: 0.15)) { showActionMenu = true }
                     } else if value.translation.height > 60 {
                         lastAISwipeTime = now
                         guard controller.hasFullAccess else {
